@@ -8,7 +8,9 @@ class DPWebService: NSObject {
     
     fileprivate static let noInternet = "No internet connection was found. please try again later"
     fileprivate static let noConnection = "Cannot connect to server"
-    fileprivate static let baseUrl = "http://172.16.16.48/coupleGame/public/index.php/api/"
+    //Specify your APIURl in baseURL
+    fileprivate static let baseUrl = ""
+    
     
     enum DPMethod : String {
         case GET = "GET"
