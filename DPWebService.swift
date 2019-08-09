@@ -4,14 +4,11 @@ import Foundation
 import UIKit
 import SystemConfiguration
 
-
-
-
 class DPWebService: NSObject {
-
+    
     fileprivate static let noInternet = "No internet connection was found. please try again later"
     fileprivate static let noConnection = "Cannot connect to server"
-    fileprivate static let baseUrl = "http://walkingappfree.com/api/"
+    fileprivate static let baseUrl = "http://172.16.16.48/coupleGame/public/index.php/api/"
     
     enum DPMethod : String {
         case GET = "GET"
@@ -65,23 +62,24 @@ class DPWebService: NSObject {
         let config = URLSessionConfiguration.default
         let session = URLSession(configuration: config)        //session.delegate = self
         request.httpMethod = methodName.rawValue
+        request.addValue("bb0817d0bd9a90fcad71d85391bc946b", forHTTPHeaderField: "AuthToken")
         request = DPWebService.header(request: request)
         
         let apibody = DPWebService.getBody(body: body)
         if DPWebService.checkMultipart(apibody) {
-            request = self.multiPart(request: request, apibody: apibody)
+            //            request = self.multiPart(request: request, apibody: apibody)
         }else{
             let apiParameter = DPWebService.stringFromDictionart(apibody: apibody)
             request.httpBody = apiParameter.data(using: String.Encoding.utf8.rawValue)
         }
-
+        
         if view != nil  {
             
             DPLoader.show(InView:view, message)
         }
- 
+        
         let task = session.dataTask(with: request as URLRequest, completionHandler: {data, response, error -> Void in
-    
+            
             DispatchQueue.main.async {
                 
                 if view != nil  {
@@ -95,12 +93,12 @@ class DPWebService: NSObject {
                     print("Url: \(self.baseUrl)" + api)
                     print("Body: \(apibody)" )
                     print("Responcse : \(strData!)")
-            
+                    
                     do {
                         if  let JSON = try JSONSerialization.jsonObject(with: data!, options: []) as? NSDictionary {
                             
                             if let status = JSON["code"] as? NSNumber {
-                
+                                
                                 var message = "No message from Searver side"
                                 if let msg  = JSON["message"] as? String{
                                     message = msg
@@ -117,7 +115,7 @@ class DPWebService: NSObject {
                                         return
                                     }
                                     UIAlertController.showAlertError(message:message)
-                                   
+                                    
                                 }
                                 
                             }
@@ -135,7 +133,7 @@ class DPWebService: NSObject {
                         return
                     }
                     
-                   // print(error!.localizedDescription)
+                    // print(error!.localizedDescription)
                     UIAlertController.showAlertError(message: self.noConnection)
                     
                 }
@@ -148,53 +146,54 @@ class DPWebService: NSObject {
         
     }
     
-
-    fileprivate class  func multiPart(request:NSMutableURLRequest,apibody:NSMutableDictionary) -> NSMutableURLRequest {
-
-        let boundary = "---------------------------14737809831466499882746641449"
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        
-        let body = NSMutableData()
-        
-        for key in apibody.allKeys{
-            
-            if apibody[key as! String]!  is NSString{
- 
-                body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
-                body.append("Content-Disposition:form-data; name=\"\(key)\"\r\n\r\n".data(using: String.Encoding.utf8)!)
-                body.append("\(apibody[key as! String]!)\r\n".data(using: String.Encoding.utf8)!)
-                
-            }
-            else if apibody[key as! String]!  is NSNumber{
-                
-                body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
-                body.append("Content-Disposition:form-data; name=\"\(key)\"\r\n\r\n".data(using: String.Encoding.utf8)!)
-                body.append("\(apibody[key as! String]!)\r\n".data(using: String.Encoding.utf8)!)
-                
-            }
-            else if apibody[key as! String]! is UIImage{
-                
-                let imageData = UIImageJPEGRepresentation(apibody[key as! String] as! UIImage, 0.3)
-                // print("imageSize = \((imageData! as NSData).length/1024)")
-                if imageData == nil {
-                    break;
-                }
-                body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
-                body.append("Content-Disposition:form-data; name=\"\(key)\"; filename=\"a.jpg\"\r\n".data(using: String.Encoding.utf8)!)
-                body.append("Content-Type: \("image/jpeg")\r\n\r\n".data(using: String.Encoding.utf8)!)
-                body.append(imageData!)
-                body.append("\r\n".data(using: String.Encoding.utf8)!)
-
-            }
-            
-        }
-        
-        
-        body.append("--\(boundary)--\r\n".data(using: String.Encoding.utf8)!)
-        request.httpBody = body as Data
-        return request
-        
-    }
+    
+    //    fileprivate class  func multiPart(request:NSMutableURLRequest,apibody:NSMutableDictionary) -> NSMutableURLRequest {
+    //
+    //        let boundary = "---------------------------14737809831466499882746641449"
+    //        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+    //
+    //        let body = NSMutableData()
+    //
+    //        for key in apibody.allKeys{
+    //
+    //            if apibody[key as! String]!  is NSString{
+    //
+    //                body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
+    //                body.append("Content-Disposition:form-data; name=\"\(key)\"\r\n\r\n".data(using: String.Encoding.utf8)!)
+    //                body.append("\(apibody[key as! String]!)\r\n".data(using: String.Encoding.utf8)!)
+    //
+    //            }
+    //            else if apibody[key as! String]!  is NSNumber{
+    //
+    //                body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
+    //                body.append("Content-Disposition:form-data; name=\"\(key)\"\r\n\r\n".data(using: String.Encoding.utf8)!)
+    //                body.append("\(apibody[key as! String]!)\r\n".data(using: String.Encoding.utf8)!)
+    //
+    //            }
+    //            else if apibody[key as! String]! is UIImage{
+    //                let img = apibody[key as! String] as! UIImage
+    //                let imageData = img.jpegData(compressionQuality: 1.0)
+    //                    //UIImageJPEGRepresentation(apibody[key as! String] as! UIImage, 0.3)
+    //                // print("imageSize = \((imageData! as NSData).length/1024)")
+    //                if imageData == nil {
+    //                    break;
+    //                }
+    //                body.append("--\(boundary)\r\n".data(using: String.Encoding.utf8)!)
+    //                body.append("Content-Disposition:form-data; name=\"\(key)\"; filename=\"a.jpg\"\r\n".data(using: String.Encoding.utf8)!)
+    //                body.append("Content-Type: \("image/jpeg")\r\n\r\n".data(using: String.Encoding.utf8)!)
+    //                body.append(imageData!)
+    //                body.append("\r\n".data(using: String.Encoding.utf8)!)
+    //
+    //            }
+    //
+    //        }
+    //
+    //
+    //        body.append("--\(boundary)--\r\n".data(using: String.Encoding.utf8)!)
+    //        request.httpBody = body as Data
+    //        return request
+    //
+    //    }
     
     class func webServiceDataTask(){
         
@@ -203,9 +202,8 @@ class DPWebService: NSObject {
     class  func header(request:NSMutableURLRequest) -> NSMutableURLRequest {
         
         let authStr: String = "\("pnp"):\("api@pnp")"
-        let authData: Data? = authStr.data(using: String.Encoding.utf8)
+        let authData = authStr.data(using: String.Encoding.utf8)
         let authValue: String? = "Basic \(authData!.base64EncodedString())"
-        
         request.addValue(authValue!, forHTTPHeaderField: "Authorization")
         return request
     }
@@ -220,9 +218,6 @@ class DPWebService: NSObject {
         }
         
         //Put Extra Common parameter here
-       
-        
-        
         return apibody
     }
     
@@ -301,7 +296,7 @@ class DPLoader : UIView {
         super.init(frame: frame)
         
         let activityIndicater = UIActivityIndicatorView()
-        activityIndicater.activityIndicatorViewStyle = .whiteLarge
+        activityIndicater.style = .whiteLarge
         activityIndicater.color = UIColor.white
         activityIndicater.startAnimating()
         
@@ -413,21 +408,21 @@ class DPLoader : UIView {
 
 extension UIAlertController {
     
-
+    
     class func showAlertError(message:String){
         
         
-//        AlertBar.show(type: .Custom(#colorLiteral(red: 1, green: 0.5644996166, blue: 0.01918258332, alpha: 1), #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1)), message: message)
+        //        AlertBar.show(type: .Custom(#colorLiteral(red: 1, green: 0.5644996166, blue: 0.01918258332, alpha: 1), #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1)), message: message)
         
-//                let systemSoundID: SystemSoundID = 1016
-//                AudioServicesPlaySystemSound (systemSoundID)
-//                AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
-//                let alertController = UIAlertController(title: "", message:message , preferredStyle: .alert)
-//                let defaultAction = UIAlertAction(title: "OK", style: .default, handler: nil)
-//                alertController.addAction(defaultAction)
-//                appDelegate.window?.rootViewController?.present(alertController, animated: true, completion: nil)
-//
-
+        //                let systemSoundID: SystemSoundID = 1016
+        //                AudioServicesPlaySystemSound (systemSoundID)
+        //                AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+        //                let alertController = UIAlertController(title: "", message:message , preferredStyle: .alert)
+        //                let defaultAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        //                alertController.addAction(defaultAction)
+        //                appDelegate.window?.rootViewController?.present(alertController, animated: true, completion: nil)
+        //
+        
         print("set UIAlertController in \(#function)")
         
         
@@ -510,9 +505,9 @@ public class Reachability {
     
     fileprivate var isRunningOnDevice: Bool = {
         #if (arch(i386) || arch(x86_64)) && os(iOS)
-            return false
+        return false
         #else
-            return true
+        return true
         #endif
     }()
     
@@ -660,9 +655,9 @@ fileprivate extension Reachability {
     
     var isOnWWANFlagSet: Bool {
         #if os(iOS)
-            return reachabilityFlags.contains(.isWWAN)
+        return reachabilityFlags.contains(.isWWAN)
         #else
-            return false
+        return false
         #endif
     }
     var isReachableFlagSet: Bool {
@@ -712,4 +707,5 @@ fileprivate extension Reachability {
         }
     }
 }
+
 
